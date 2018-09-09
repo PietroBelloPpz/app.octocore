@@ -1,6 +1,7 @@
 'use strict';
 
-var base_url = 'http://localhost.nannyapp.cloud/';
+//var base_url = 'http://localhost.nannyapp.cloud/';
+var base_url = 'http://localhostapp.nannyapp.cloud/';
 //var base_url = 'http://192.168.1.14:8061/';
 var app_details = null;
 var current_user = null;
