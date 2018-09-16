@@ -2,11 +2,11 @@
 	<!-- Begin: Page Content -->
   <div class="page-content">
 		<div class="content-block">
-			<img class="logo" src="assets/custom/img/logo.svg" alt="Nectar" />
+			<img class="logo" src="" alt="" />
 		</div>
 		<div class="content-block">
 			<p>
-				<button class="button button-big button-block button-fill button-social button-facebook">
+				<button class="button button-big button-block button-fill button-social button-facebook" onClick="octocore_signinWithFB()">
 					<i class="fa fa-fw fa-lg fa-facebook"></i>
 					<span>Connect with Facebook</span>
 				</button>
@@ -46,7 +46,7 @@
 
 		<div class="container">
 			<div class="content-block">
-				<img class="logo" src="assets/custom/img/logo.svg" alt="Nectar" />
+				<img class="logo" src="" alt="" />
 			</div>
 
 			<form name="signup-email" action="#" method="POST" enctype="multipart/form-data">
@@ -59,7 +59,20 @@
 								</div>
 								<div class="item-inner">
 									<div class="item-input">
-										<input type="text" name="name" placeholder="Name" required />
+										<input type="text" name="first_name" placeholder="First Name" required />
+									</div>
+									<div class="item-text input-error"></div>
+								</div>
+							</div>
+						</li>
+						<li>
+							<div class="item-content">
+								<div class="item-media">
+									<i class="material-icons">person_outline</i>
+								</div>
+								<div class="item-inner">
+									<div class="item-input">
+										<input type="text" name="second_name" placeholder="Last Name" required />
 									</div>
 									<div class="item-text input-error"></div>
 								</div>
@@ -72,7 +85,7 @@
 								</div>
 								<div class="item-inner">
 									<div class="item-input">
-										<input type="tel" name="mobile" placeholder="Mobile" />
+										<input type="tel" name="phone" placeholder="Mobile" />
 									</div>
 									<div class="item-text input-error"></div>
 								</div>

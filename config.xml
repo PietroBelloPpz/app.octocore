@@ -9,4 +9,13 @@
     </author>
     <content src="index.html" />
     <access origin="*" />
+    <plugin name="cordova-plugin-sqlite-2" spec="~1.0.4" />
+    <plugin name="cordova-plugin-facebook4" spec="~2.5.0">
+        <variable name="APP_ID" value="540152799766625" />
+        <variable name="APP_NAME" value="NannyApp" />
+        <variable name="FACEBOOK_ANDROID_SDK_VERSION" value="4.+" />
+    </plugin>
+    <engine name="android" spec="~7.0.0" />
+    <engine name="ios" spec="~4.5.5" />
+    <engine name="browser" spec="^5.0.4" />
 </widget>

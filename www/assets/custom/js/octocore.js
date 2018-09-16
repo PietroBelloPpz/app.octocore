@@ -1,11 +1,12 @@
 'use strict';
 
-//var base_url = 'http://localhost.nannyapp.cloud/';
-var base_url = 'http://localhostapp.nannyapp.cloud/';
+var base_url = 'http://localhost.nannyapp.cloud/';
+//var base_url = 'http://localhostapp.nannyapp.cloud/';
 //var base_url = 'http://192.168.1.14:8061/';
 var app_details = null;
 var current_user = null;
-var auth_token = '123456';
+var app_id = '1';
+var logo_src = 'assets/custom/img/NannyApp-logo-animBreath.svg';
 
 /*
 var url = 'http://localhost.nannyapp.cloud/users_ajax';
@@ -19,14 +20,14 @@ var filter = {
 };
 */
 
-function octocore_init(id_server, callback) {
+function octocore_init(callback) {
 
 	var filter = {
 		command : "init",
-		auth_token : auth_token
+		auth_token : localStorage.auth_token
 	};
-	
-	$.post(octocore_url('app', id_server), filter, function( data ) {
+
+	$.post(octocore_url('app', app_id), filter, function( data ) {
 
 		app_details = data.result;
 		current_user = data.current_user;
@@ -49,6 +50,14 @@ function octocore_get_app_detail(code, default_value) {
 		}
 	}
 	return default_value;
+}
+
+function octocore_logo() {
+	
+	var logo_img = $('img.logo');
+	if (logo_img) {
+		logo_img.attr('src', logo_src);
+	}
 }
 
 function octocore_sidebar() {
@@ -83,11 +92,13 @@ function octocore_theme() {
 			$$('body').removeClass('layout-dark');
 		break;
 	}
+
+	octocore_logo();
 }
 
 function octocore_url(entity, id) {
 	
-	var entity_url = '';
+	var entity_url = entity;
 
 	switch(entity) {
 		case 'app':
@@ -105,12 +116,10 @@ function octocore_url(entity, id) {
 	}
 
 	if (id) {
-		return  base_url+entity_url+'_ajax/'+id;	
+		return  base_url+entity_url+'/'+id;
 	} else {
-		return  base_url+entity_url+'_ajax';
-	}
-
-	
+		return  base_url+entity_url;
+	}	
 }
 
 
@@ -130,6 +139,24 @@ function octocore_dynamiclinks() {
 	});
 }
 
+function octocore_signinWithFB(){
+	facebookConnectPlugin.login(["public_profile","email"],function(result){
+		//calling api after login success
+		facebookConnectPlugin.api("/me?fields=email,name,picture",
+			["public_profile","email"]
+			,function(userData){
+				//API success callback
+				alert(JSON.stringify(userData));
+			},function(error){
+				//API error callback
+				alert(JSON.stringify(error));
+		});
+	},function(error){
+		//authenication error callback
+		alert(JSON.stringify(error));
+	});
+}
+
 function octocore_slider(page, id_dom, id_server) {
 
 	var slider_hero = $('#'+id_dom+'.slider-hero');
@@ -138,7 +165,7 @@ function octocore_slider(page, id_dom, id_server) {
 	var swiper_slide_template = $('<div class="swiper-slide template" style="background-image: url(\'\');"><div class="slide-content"><div class="slide-title"></div><div class="slide-text"></div></div></div>');
 
 	var filter = {
-		auth_token : auth_token
+		auth_token : localStorage.auth_token
 	};
 	
 	$.post(octocore_url('slider', id_server), filter, function( data ) {
@@ -172,7 +199,7 @@ function octocore_walkthrough(page, id_dom, id_server) {
 	var swiper_slide_template = $('<div id="" class="swiper-slide walkthrough-slide template"><div class="slide-title"></div><div class="slide-media"><img src="" alt="" /></div><div class="slide-text"</div></div>');
 
 	var filter = {
-		auth_token : auth_token
+		auth_token : localStorage.auth_token
 	};
 	
 	$.post(octocore_url('slider', id_server), filter, function( data ) {
@@ -200,7 +227,7 @@ function octocore_walkthrough(page, id_dom, id_server) {
 function octocore_slider_TEMPLATE(page, id_dom, id_server) {
 
 	var filter = {
-		auth_token : auth_token
+		auth_token : localStorage.auth_token
 	};
 	
 	$.post(octocore_url('slider', id_server), filter, function( data ) {
@@ -235,7 +262,7 @@ function octocore_list(entity) {
 
 	var filter = {
 		command : 'list',
-		auth_token : auth_token
+		auth_token : localStorage.auth_token
 	};
 	
 	$.post(octocore_url(entity, null), filter, function( data ) {
@@ -262,7 +289,7 @@ function octocore_list_wide(entity) {
 
 	var filter = {
 		command : 'list',
-		auth_token : auth_token
+		auth_token : localStorage.auth_token
 	};
 	
 	$.post(octocore_url(entity, null), filter, function( data ) {
