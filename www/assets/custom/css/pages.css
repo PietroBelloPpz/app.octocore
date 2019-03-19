@@ -837,6 +837,7 @@
 	flex-direction: column;
 	flex-wrap: nowrap;
 	overflow-y: auto;
+	text-align: center;
 }
 
 .page[data-page=login] .page-content > :first-child {
@@ -847,7 +848,6 @@
 .page[data-page=login] .logo {
 	display: block;
 	height: 144px;
-	margin: 0 auto;
 	width: auto;
 }
 
@@ -1657,7 +1657,7 @@
 |------------------------------------------------------------------------------
 */
 
-.page[data-page=signup] .page-content {
+.page[data-page=signup] .page-content, .page[data-page=signup-address] .page-content, .page[data-page=signup-type] .page-content {
 	display: flex;
 	flex-direction: column;
 	flex-wrap: nowrap;
@@ -1680,6 +1680,7 @@
 	flex-direction: column;
 	flex-wrap: nowrap;
 	overflow-y: auto;
+	text-align: center;
 }
 
 .popup-signup-email .container > :first-child {
@@ -2062,9 +2063,14 @@
 
 .page[data-page=walkthrough] .walkthrough-slide .slide-title {
 	font-family: 'Roboto Slab';
-	font-size: 20px;
+	font-size: 36px;
 	margin: 8px 0;
 	padding: 0 16px;
+	color: #000000;
+
+	-webkit-text-fill-color: #000;
+    -webkit-text-stroke-width: 1px;
+    -webkit-text-stroke-color: #fff;
 }
 
 .page[data-page=walkthrough] .walkthrough-slide .slide-media {
@@ -2079,9 +2085,11 @@
 }
 
 .page[data-page=walkthrough] .walkthrough-slide .slide-text {
-	font-size: 14px;
+	font-size: 18px;
 	margin: 8px 0;
 	padding: 0 16px;
+
+	text-shadow: 2px 2px 4px rgba(255, 255, 255, 1);
 }
 
 .page[data-page=walkthrough] .walkthrough-slide .slide-actions {

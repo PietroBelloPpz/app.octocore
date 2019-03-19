@@ -644,7 +644,8 @@ myApp.onPageInit('home', function(page) {
 
 	$.ajaxSetup({ cache : false });
 		
-	octocore_slider("home", "slider-home", 1);
+	octocore_slider("home", "slider-home", 2);
+	octocore_features("home", "features-home", "linea");
 
 	/* Theme Color */
 	if (sessionStorage.getItem('nectarMaterialThemeColor')) {
@@ -719,6 +720,8 @@ myApp.onPageInit('home', function(page) {
 
 myApp.onPageInit('login', function(page) {
 
+	octocore_logo();
+
 	/* Show|Hide Password */
 	$$('.page[data-page=login] [data-action=show-hide-password]').on('click', function() {
 		if ($$('.page[data-page=login] input[data-toggle=show-hide-password]').attr('type') === 'password') {
@@ -771,16 +774,22 @@ myApp.onPageInit('login', function(page) {
 					localStorage.auth_token = data.result.auth_token;
 					localStorage.user_id = data.result.user_id;
 
-					myApp.addNotification({
-				        message: 'Welcome',
-								hold: 1500,
-								button: {
-									text: ''
-								}
-							});
-							mainView.router.load({
-								url: 'home.html'
-							});
+					octocore_init(function() { 
+
+						octocore_sidebar(); 
+			
+						myApp.addNotification({
+					        message: 'Welcome',
+									hold: 1500,
+									button: {
+										text: ''
+									}
+								});
+								mainView.router.load({
+									url: 'home.html'
+								});
+						
+						});
 					}
 				});
 			return false;
@@ -791,11 +800,34 @@ myApp.onPageInit('login', function(page) {
 
 /*
 |------------------------------------------------------------------------------
+| Sign out
+|------------------------------------------------------------------------------
+*/
+
+myApp.onPageInit('signout', function(page) {
+
+	localStorage.auth_token = null;
+	localStorage.user_id = null;
+
+	current_user = null;
+
+	setTimeout(function() {
+		octocore_router_init()
+	}, 2000);	
+
+});
+
+/*
+|------------------------------------------------------------------------------
 | News Article
 |------------------------------------------------------------------------------
 */
 
 myApp.onPageInit('news-article', function(page) {
+
+	//$.ajaxSetup({ cache : false });
+		
+	octocore_newsarticle(localStorage.octocore_entity, localStorage.octocore_id);
 
 	$('.popup-article-comment form[name=article-comment]').validate({
 		rules: {
@@ -1309,28 +1341,28 @@ myApp.onPageInit('signup', function(page) {
 			},
 			email: {
 				required: true,
-        email:true
-      },
-      password: {
+        		email:true
+      		},
+      		password: {
 				required: true,
 				minlength: 8
 			}
 		},
-    messages: {
+    	messages: {
 			name: {
 				required: 'Please enter name.'
 			},
 			email: {
 				required: 'Please enter email address.',
-        email: 'Please enter a valid email address.'
-      },
+        		email: 'Please enter a valid email address.'
+      		},
 			password: {
 				required: 'Please enter password.',
 				minlength: 'Password must be at least 8 characters long.'
-      }
+      		}
 		},
 		onkeyup: false,
-    errorElement : 'div',
+	    errorElement : 'div',
 		errorPlacement: function(error, element) {
 			error.appendTo(element.parent().siblings('.input-error'));
 		},
@@ -1345,6 +1377,10 @@ myApp.onPageInit('signup', function(page) {
 					localStorage.auth_token = data.result.auth_token;
 					localStorage.user_id = data.result.user_id;
 
+					octocore_init(function() { 
+
+						octocore_sidebar(); 
+
 						myApp.closeModal('.popup-signup-email');
 						myApp.addNotification({
 			       			message: 'Thank you for signing up with us.',
@@ -1356,10 +1392,129 @@ myApp.onPageInit('signup', function(page) {
 						mainView.router.load({
 							url: 'home.html'
 						});
-					}
-				});
+					});
+				}
+			});
 			return false;
 
+		}
+	});
+
+});	
+
+
+/*
+|------------------------------------------------------------------------------
+| Sign Up Address
+|------------------------------------------------------------------------------
+*/
+
+myApp.onPageInit('signup-address', function(page) {
+
+	octocore_logo();
+
+	/* Validate & Submit Form */
+	$('form[name=signup-address]').validate({
+		rules: {
+			address: {
+				required: true
+			},
+			city: {
+				required: true
+      		},
+			ZIP: {
+				required: true
+      		},
+			state: {
+				required: true
+      		},
+			country: {
+				required: true
+      		},
+		},
+    	messages: {
+			address: {
+				required: 'Please enter address.'
+			},
+			city: {
+				required: 'Please enter city.'
+			},
+			ZIP: {
+				required: 'Please enter ZIP.'
+			},
+			state: {
+				required: 'Please enter state.'
+			},
+			country: {
+				required: 'Please enter country.'
+			},
+		},
+		onkeyup: false,
+	    errorElement : 'div',
+		errorPlacement: function(error, element) {
+			error.appendTo(element.parent().siblings('.input-error'));
+		},
+		submitHandler: function(form) {
+
+			var parameters = octocore_objectifyForm($(form));
+			parameters.auth_token = localStorage.auth_token;
+			parameters.command = 'update';
+			parameters.related_entity_id = current_user.id;
+			parameters.related_entity_name = 'CoreUser';
+
+			$.post(octocore_url('address_ajax', null), parameters, function( data ) {
+
+				console.log(data)
+
+				if (data.status=='OK') {
+					
+					octocore_init(function() { 
+						octocore_router_init();
+					});
+				}
+			});
+			
+			return false;
+		}
+	});
+
+});	
+
+
+/*
+|------------------------------------------------------------------------------
+| Sign Up Type
+|------------------------------------------------------------------------------
+*/
+
+myApp.onPageInit('signup-type', function(page) {
+
+	octocore_logo();
+
+	$('a.core_user_group_id-selector').click(function() {
+		
+		var core_user_group_id = $(this).attr('data-id');
+		var core_user_group_description = $(this).attr('data-description');
+
+		if (confirm('You are registering as '+core_user_group_description+'. Precede?')) {
+
+			var parameters = { 
+				auth_token : localStorage.auth_token,
+				command : 'update',
+				core_user_group_id : core_user_group_id
+			};
+
+			$.post(octocore_url('core_user', current_user.id), parameters, function( data ) {
+
+				console.log(data)
+
+				if (data.result && data.result.auth_token) {
+					
+					octocore_init(function() { 
+						octocore_router_init();
+					});
+				}
+			});
 		}
 	});
 
@@ -1384,16 +1539,19 @@ myApp.onPageInit('splash-screen', function(page) {
 	function(obj) {
 		obj.el.classList.add('animation-finish');
 
-		/* 3 seconds after logo animation is completed, open walkthrough screen. */
+		/* 1 seconds after logo animation is completed, open walkthrough screen. */
 		setTimeout(function(){
 
-			octocore_init(function() { octocore_theme(); octocore_sidebar() } );
+			if (app_details==null) {
+				octocore_init(function() { 
+					octocore_theme(); 
+					octocore_sidebar(); 
+					octocore_router_init();
+					octocore_dynamiclinks();
+				});
+			}
 
-			mainView.router.load({
-				//url: 'walkthrough.html'
-				url: 'signup.html'
-			});
-		}, 3000);
+		}, 1000);
 	});
 
 	/* 1 second after page is loaded, show preloader. */
@@ -1556,5 +1714,23 @@ myApp.onPageInit('walkthrough', function(page) {
 		paginationClickable: true
 	});
 	*/
-	octocore_walkthrough("walkthrough", "slider-walkthrough", 1);
+	octocore_walkthrough("walkthrough", "slider-walkthrough", walkthrough_slider_id);
+});
+
+/*
+|------------------------------------------------------------------------------
+| Walkthrough
+|------------------------------------------------------------------------------
+*/
+
+myApp.onPageInit('terms', function(page) {
+
+	/* Initialize Slider */
+	/*
+	myApp.swiper('.page[data-page=walkthrough] .walkthrough-container', {
+		pagination: '.page[data-page=walkthrough] .walkthrough-pagination',
+		paginationClickable: true
+	});
+	*/
+	octocore_content();
 });

@@ -85,7 +85,7 @@
 			<div class="panel-header">
 				<div class="user-info">
 					<a href="user-profile.html" class="close-panel octocore-dynamic-link" data-octocore_id="">
-						<img class="img-circle user-photo" src="" width="64" height="64" alt="Avatar" />
+						<img class="img-circle user-photo" src="" width="64" height="64" alt="Avatar" onclick="picture_getPhoto(pictureSource.CAMERA)"/>
 					</a>
 					<div class="user-name"></div>
 					<div class="user-location">
@@ -97,6 +97,7 @@
 
 			<div class="list-block no-hairlines no-hairlines-between">
 				<ul>
+					<!--
 					<li>
 						<a href="home.html" class="item-link close-panel">
 							<div class="item-content">
@@ -110,29 +111,30 @@
 						</a>
 					</li>
 					<li>
-						<a href="products-list.html" class="item-link close-panel octocore-dynamic-link" data-octocore_id="" data-octocore_entity="user">
+						<a href="products-list.html" class="item-link close-panel octocore-dynamic-link" data-octocore_id="" data-octocore_entity="linea">
 							<div class="item-content">
 								<div class="item-media">
 									<img src="assets/custom/img/components.png" width="24" alt="Components" />
 								</div>
 								<div class="item-inner">
-									<div class="item-title">Users</div>
+									<div class="item-title">Nannies</div>
 								</div>
 							</div>
 						</a>
 					</li>
 					<li>
-						<a href="articles-list.html" class="item-link close-panel octocore-dynamic-link" data-octocore_id="" data-octocore_entity="user">
+						<a href="articles-list.html" class="item-link close-panel octocore-dynamic-link" data-octocore_id="" data-octocore_entity="linea">
 							<div class="item-content">
 								<div class="item-media">
 									<img src="assets/custom/img/components.png" width="24" alt="Components" />
 								</div>
 								<div class="item-inner">
-									<div class="item-title">Users Wide</div>
+									<div class="item-title">Nannies Wide</div>
 								</div>
 							</div>
 						</a>
 					</li>
+					-->
 					<li>
 						<a href="components.html" class="item-link close-panel">
 							<div class="item-content">
@@ -205,6 +207,18 @@
 							</div>
 						</a>
 					</li>
+					<li>
+						<a href="signout.html" class="item-link close-panel">
+							<div class="item-content">
+								<div class="item-media">
+									<img src="assets/custom/img/login.png" width="24" alt="Settings" />
+								</div>
+								<div class="item-inner">
+									<div class="item-title">Sign out</div>
+								</div>
+							</div>
+						</a>
+					</li>
 				</ul>
 			</div>
 		</div>
@@ -219,11 +233,11 @@
 							<div class="splash">
 								<div class="splash-media">
 									<!--spinner-->
-									<img src="" alt="logo" id="logo" class="logo">
+									<img src="" alt="logo" id="logo" class="logo" style="display:none">
 								</div>
 								<div class="splash-preloader">
 									<svg id="preloader" class="preloader" xmlns="http://www.w3.org/2000/svg" width="1632" height="320" viewBox="0 0 1632 320"></svg>
-									<span class="preloader preloader-yellow"></span>
+									<span class="preloader preloader-white"></span>
 								</div>
 							</div>
 						</div>
@@ -233,10 +247,13 @@
 			</div>
 		</div>
 
+		<div id="fb-root"></div>
+
 		<!-- Begin: Scripts -->
 		<!--
 		<script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?libraries=places&key=AIzaSyBcmwE8P44WUU4-xBfELRR9eZ2Abr1RvGw"></script>
 		-->
+        <script type="text/javascript" charset="utf-8" src="cordova.js"></script>
 
 		<script type="text/javascript" src="assets/vendor/jquery/jquery-2.2.4.min.js"></script>
 		<script type="text/javascript" src="assets/vendor/framework7/js/framework7.min.js"></script>
@@ -260,8 +277,10 @@
 
 		<script type="text/javascript" src="assets/custom/js/octocore.js"></script>
 		<script type="text/javascript" src="assets/custom/js/components.js"></script>
-		<script type="text/javascript" src="assets/custom/js/pages.js"></script>
+        <script type="text/javascript" src="assets/custom/js/pages.js"></script>
+        <script type="text/javascript" src="assets/custom/js/picture.js"></script>
 		<!--<script type="text/javascript" src="assets/custom/js/themes.js"></script>-->
+
 
 		<script type="text/javascript">
 			'use strict';
