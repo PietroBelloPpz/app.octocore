@@ -8,6 +8,10 @@
         PhoneGap Team
     </author>
     <content src="index.html" />
+    <access origin="http://nannyapp.cloud" subdomains="true" />   <!-- NECESSARIO PER CONNESSIONI AJAX E CREDO ANCHE PER OTTENERE LE IMMAGINI -->
+    <access origin="http://app.nannyapp.cloud*"/> <!-- allow local pages -->
+    <access origin="http://www.nannyapp.cloud*"/> <!-- allow local pages -->
+    <access origin="*" />
     <access origin="*" />
     <platform name="android">
         <preference name="android-minSdkVersion" value="16" />
