@@ -2,9 +2,9 @@
 
 //var base_url = 'http://localhost.nannyapp.cloud/';
 //var base_url = 'http://localhost.roncatospareparts.octocore.it/';
-//var base_url = 'http://localhostapp.nannyapp.cloud/';
+var base_url = 'http://www.nannyapp.cloud/';
 //var base_url = 'http://192.168.43.111:8061/';
-var base_url = 'http://192.168.1.83:8062/';
+//var base_url = 'http://192.168.1.83:8062/';
 var app_details = null;
 var pages = null;
 var current_user = null;
