@@ -2,8 +2,8 @@
 
 //var base_url = 'http://localhost.nannyapp.cloud/';
 //var base_url = 'http://localhost.roncatospareparts.octocore.it/';
-//var base_url = 'http://www.nannyapp.cloud/';
-var base_url = 'http://192.168.1.83:8064/';
+var base_url = 'http://www.nannyapp.cloud/';
+//var base_url = 'http://192.168.1.83:8064/';
 
 var app_id = '1';
 var app_details = null;
@@ -43,7 +43,7 @@ function octocore_init(callback) {
 		callback();
 
 	}, "json").fail(function(xhr, textStatus, errorThrown) {
-        alert(xhr.responseText);});
+        alert("Error Initialization POST " + xhr.responseText);});
 }
 
 function octocore_get_app_detail(code, default_value) {

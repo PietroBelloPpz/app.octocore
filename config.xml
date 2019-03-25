@@ -1,9 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<widget xmlns       = "http://www.w3.org/ns/widgets"
-        xmlns:gap   = "http://phonegap.com/ns/1.0"
-        id          = "com.nannyapp.app"
-        versionCode = "102"
-        version     = "1.0.0">
+<widget id="com.nannyapp.app" version="1.0.5" versionCode="105" xmlns="http://www.w3.org/ns/widgets" xmlns:gap="http://phonegap.com/ns/1.0">
     <name>NannyApp</name>
     <description>
         A blank PhoneGap app.
@@ -12,11 +8,9 @@
         PhoneGap Team
     </author>
     <content src="index.html" />
-    <access origin="http://nannyapp.cloud" subdomains="true" />
-    <access origin="http://app.nannyapp.cloud*" />
-    <access origin="http://www.nannyapp.cloud*" />
     <access origin="*" />
-    <allow-navigation href="nannyapp.cloud" />
+    <allow-navigation href="*" />
+    <allow-intent href="*" />
     <allow-intent href="tel:*" />
     <allow-intent href="sms:*" />
     <allow-intent href="mailto:*" />
