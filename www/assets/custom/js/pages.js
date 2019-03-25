@@ -644,8 +644,7 @@ myApp.onPageInit('home', function(page) {
 
 	$.ajaxSetup({ cache : false });
 		
-	octocore_slider("home", "slider-home", 2);
-	octocore_features("home", "features-home", "linea");
+	octocore_build_page(page.name);
 
 	/* Theme Color */
 	if (sessionStorage.getItem('nectarMaterialThemeColor')) {
@@ -771,12 +770,13 @@ myApp.onPageInit('login', function(page) {
 
 				if (data.result && data.result.auth_token) {
 					
-					localStorage.auth_token = data.result.auth_token;
-					localStorage.user_id = data.result.user_id;
+					global_auth_token = data.result.auth_token;
+					localStorage.auth_token = global_auth_token;
 
 					octocore_init(function() { 
 
 						octocore_sidebar(); 
+						octocore_router_init();
 			
 						myApp.addNotification({
 					        message: 'Welcome',
@@ -806,8 +806,8 @@ myApp.onPageInit('login', function(page) {
 
 myApp.onPageInit('signout', function(page) {
 
+	global_auth_token = null;
 	localStorage.auth_token = null;
-	localStorage.user_id = null;
 
 	current_user = null;
 
@@ -827,7 +827,7 @@ myApp.onPageInit('news-article', function(page) {
 
 	//$.ajaxSetup({ cache : false });
 		
-	octocore_newsarticle(localStorage.octocore_entity, localStorage.octocore_id);
+	octocore_newsarticle(current_entity_name, current_entity_id);
 
 	$('.popup-article-comment form[name=article-comment]').validate({
 		rules: {
@@ -1065,11 +1065,12 @@ myApp.onPageInit('pattern-lock', function(page) {
 
 myApp.onPageInit('articles-list', function(page) {
 
-	console.log('entity '+localStorage.octocore_entity)
+	console.log('entity '+current_entity_name)
 
-	$('.entity-title').html(localStorage.octocore_entity);
+	//$('.entity-title').html(current_entity_name);
 
-	octocore_list_wide(localStorage.octocore_entity);
+	//octocore_list_wide("articles-list",current_entity_name);
+	octocore_build_page(page.name);
 
 	/*
 	$$('body').on('click', '.page[data-page=products-list] [data-action=cart-add]', function() {
@@ -1088,11 +1089,12 @@ myApp.onPageInit('articles-list', function(page) {
 
 myApp.onPageInit('products-list', function(page) {
 
-	console.log('entity '+localStorage.octocore_entity)
+	console.log('entity '+current_entity_name)
 
-	$('.entity-title').html(localStorage.octocore_entity);
+	//$('.entity-title').html(current_entity_name);
 
-	octocore_list(localStorage.octocore_entity);
+	//octocore_list(current_entity_name);
+	octocore_build_page(page.name);
 
 	/*
 	$$('body').on('click', '.page[data-page=products-list] [data-action=cart-add]', function() {
@@ -1373,9 +1375,10 @@ myApp.onPageInit('signup', function(page) {
 				console.log(data)
 
 				if (data.result && data.result.auth_token) {
+
+					global_auth_token = data.result.auth_token;
 					
-					localStorage.auth_token = data.result.auth_token;
-					localStorage.user_id = data.result.user_id;
+					localStorage.auth_token = global_auth_token;
 
 					octocore_init(function() { 
 
@@ -1457,7 +1460,7 @@ myApp.onPageInit('signup-address', function(page) {
 		submitHandler: function(form) {
 
 			var parameters = octocore_objectifyForm($(form));
-			parameters.auth_token = localStorage.auth_token;
+			parameters.auth_token = global_auth_token;
 			parameters.command = 'update';
 			parameters.related_entity_id = current_user.id;
 			parameters.related_entity_name = 'CoreUser';
@@ -1499,7 +1502,7 @@ myApp.onPageInit('signup-type', function(page) {
 		if (confirm('You are registering as '+core_user_group_description+'. Precede?')) {
 
 			var parameters = { 
-				auth_token : localStorage.auth_token,
+				auth_token : global_auth_token,
 				command : 'update',
 				core_user_group_id : core_user_group_id
 			};
@@ -1655,10 +1658,10 @@ myApp.onPageInit('user-profile', function(page) {
 	console.log("set localstorage  data-octocore_id : "+  $(this).attr('data-octocore_id'));
 
 	var filter = {
-		auth_token : auth_token
+		auth_token : global_auth_token
 	};
 	
-	$.post(octocore_url('user', localStorage.octocore_id), filter, function( data ) {
+	$.post(octocore_url('user', current_entity_id), filter, function( data ) {
 
 		var user = data.result;
 

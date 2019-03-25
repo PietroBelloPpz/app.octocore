@@ -8,5 +8,13 @@
         PhoneGap Team
     </author>
     <content src="index.html" />
+    <access origin="http://nannyapp.cloud" subdomains="true" />
+    <access origin="http://app.nannyapp.cloud*" />
+    <access origin="http://www.nannyapp.cloud*" />
     <access origin="*" />
+    <allow-navigation href="nannyapp.cloud" />
+    <allow-intent href="tel:*" />
+    <allow-intent href="sms:*" />
+    <allow-intent href="mailto:*" />
+    <allow-intent href="geo:*" />
 </widget>

@@ -2,34 +2,33 @@
 
 //var base_url = 'http://localhost.nannyapp.cloud/';
 //var base_url = 'http://localhost.roncatospareparts.octocore.it/';
-var base_url = 'http://www.nannyapp.cloud/';
-//var base_url = 'http://192.168.43.111:8061/';
-//var base_url = 'http://192.168.1.83:8062/';
+//var base_url = 'http://www.nannyapp.cloud/';
+var base_url = 'http://192.168.1.83:8064/';
+
+var app_id = '1';
 var app_details = null;
 var pages = null;
 var current_user = null;
 var base_user_group_id = null;
-var app_id = '1';
 var walkthrough_slider_id = null;
+var walkthrough_slider_date = null;
 var logo_src = 'assets/custom/img/NannyApp-logo-animBreath.svg';
 
-/*
-var url = 'http://localhost.nannyapp.cloud/users_ajax';
-var columns = {};
-columns[0] = {};
-columns[0]['data'] = 'avatar';
-var filter = {
-	command : 'list',
-	auth_token : '123456',
-	columns : columns
-};
-*/
+var global_auth_token = null;
+
+var current_page_index = null;
+var current_entity_name = null;
+var current_entity_id = null;
 
 function octocore_init(callback) {
 
+	if (global_auth_token==null) {
+		global_auth_token = localStorage.auth_token;
+	}
+
 	var filter = {
 		app_id : app_id,
-		auth_token : localStorage.auth_token
+		auth_token : global_auth_token
 	};
 
 	$.post(octocore_url('app-get-init', ''), filter, function( data ) {
@@ -43,7 +42,8 @@ function octocore_init(callback) {
 
 		callback();
 
-	}, "json");
+	}, "json").fail(function(xhr, textStatus, errorThrown) {
+        alert(xhr.responseText);});
 }
 
 function octocore_get_app_detail(code, default_value) {
@@ -67,12 +67,15 @@ function octocore_logo() {
 }
 
 function octocore_router_init() {
+
+	console.log('function octocore_router_init');
+
 /*
 	mainView.router.load({
 			url: 'signup-address.html'
 		});return;
 */
-	if ( localStorage.skip_walkthrough!=true ) {
+	if ( localStorage.skip_walkthrough!=true || localStorage.walkthrough_slider_date==null || localStorage.walkthrough_slider_date<octocore_get_app_detail("WALKTHROUGH_SLIDER_DATE")) {
 		
 		mainView.router.load({
 			url: 'walkthrough.html'
@@ -97,9 +100,20 @@ function octocore_router_init() {
 		});
 
 	} */else {
+
+		var home_template = 'home.html';
+		var home_page_id = app_details.home_page_id;
+		for (var i = pages.length - 1; i >= 0; i--) {
+			if (home_page_id && home_page_id==pages[i].id) {
+				home_template = pages[i].template+'.html';
+
+				current_entity_name = pages[i].entity_name;
+				current_page_index = pages[i].id;
+			}
+		}
 		
 		mainView.router.load({
-			url: 'home.html'
+			url: home_template
 		});
 	}
 }
@@ -146,7 +160,7 @@ function octocore_sidebar() {
 			//menu_voice_new.find('a').attr('data-octocore_entity', pages[i].entity_name);
 			menu_voice_new.find('a').attr('data-octocore_entity', pages[i].entity_url);
 			menu_voice_new.find('a').attr('data-octocore_id', pages[i].entity_id);
-			menu_voice_new.find('a').attr('data-page_index', i);
+			menu_voice_new.find('a').attr('data-page_index', pages[i].id);
 			menu_voice_new.find('a').attr('href', pages[i].template+'.html');
 			menu_voice_new.find('.item-title').html(pages[i].title);
 			menu_voice_new.find('img').attr('alt', pages[i].title);
@@ -201,11 +215,18 @@ function octocore_url(entity, id) {
 		break;
 	}
 
+	var url = '';
 	if (id) {
-		return  base_url+entity_url+'_ajax/'+id;
+		url = base_url+entity_url+'_ajax/'+id;
 	} else {
-		return  base_url+entity_url;
+		url = base_url+entity_url;
 	}	
+/*
+	if (base_url_company!=null) {
+		url += '?company='+base_url_company
+	}
+*/
+	return url;
 }
 
 
@@ -223,9 +244,9 @@ function octocore_dynamiclinks() {
 
 			$(this).click(function() {
 		
-				localStorage.octocore_id = $(this).attr('data-octocore_id');
-				localStorage.octocore_entity = $(this).attr('data-octocore_entity');
-				localStorage.page_index = $(this).attr('data-page_index');
+				current_entity_id = $(this).attr('data-octocore_id');
+				current_entity_name = $(this).attr('data-octocore_entity');
+				current_page_index = $(this).attr('data-page_index');
 
 				console.log("set localstorage  data-octocore_id : "+  $(this).attr('data-octocore_id'));
 				console.log("set localstorage  data-octocore_entity : "+  $(this).attr('data-octocore_entity'));
@@ -262,9 +283,8 @@ function octocore_signinWithFB(){
 	*/
 }
 
-
 function octocore_content() {
-	var page = pages[localStorage.page_index];
+	var page = pages[current_page_index];
 	var static_contents = $.parseJSON(page.static_contents);
 	for (var i = 0; i < static_contents.length; i++){
 		var element = $('.static_content-'+static_contents[i].code);
@@ -274,17 +294,68 @@ function octocore_content() {
 	}
 }
 
-function octocore_slider(page, id_dom, id_server) {
+function octocore_build_page(page_dom_id) {
 
-	console.log("function octocore_slider : "+page+" "+id_dom+" "+id_server);
+	if (current_page_index==null) {
+		current_page_index = app_details.home_page_id;
+	}
 
-	var slider_hero = $('#'+id_dom+'.slider-hero');
+	octocore_build_page_id(page_dom_id, current_page_index);
+}
+
+function octocore_build_page_id(page_dom_id, page_id) {
+
+	console.log('----------------------------------');
+	console.log('function octocore_build_page_id : '+page_dom_id+' '+page_id);
+
+	$('.entity-title').html(current_entity_name);
+
+	var page = null;
+	for (var i = pages.length - 1; i >= 0; i--) {
+		if (pages[i].id==page_id) {
+			page = pages[i];
+		}
+	}
+
+	if (page) {
+		var controllers = page.controllers;
+
+		for (var i = 0; i<controllers.length; i++) {
+
+			if (controllers[i].type=="SLIDER") {
+				//octocore_slider(page.name, "slider-home", controllers[i].id);
+				octocore_slider(page_dom_id, controllers[i].id);
+
+			} else if (controllers[i].type=="FEATURES-SCROLL") {
+				octocore_features(page_dom_id, controllers[i].entity_url);	
+
+			} else if (controllers[i].type=="ARTICLE-LIST") {
+				octocore_articles_list(page_dom_id, controllers[i].entity_url, false);	
+
+			} else if (controllers[i].type=="ARTICLE-LIST-COMPACT") {
+				octocore_articles_list(page_dom_id, controllers[i].entity_url, true);	
+
+			} else if (controllers[i].type=="PRODUCT-LIST") {
+				octocore_proucts_list(page_dom_id, controllers[i].entity_url);	
+			}
+
+		}
+		
+		
+	}
+}
+
+function octocore_slider(page, id_server) {
+
+	console.log("function octocore_slider : "+page+" "+id_server);
+
+	var slider_hero = $('.slider-hero');
 	slider_hero.html('<div class="swiper-container"><div class="swiper-wrapper"></div><div class="swiper-pagination"></div></div>');
 	var swiper_wrapper = slider_hero.find('.swiper-wrapper');
 	var swiper_slide_template = $('<div class="swiper-slide template" style="background-image: url(\'\');"><div class="slide-content"><div class="slide-title"></div><div class="slide-text"></div></div></div>');
 
 	var filter = {
-		auth_token : localStorage.auth_token
+		auth_token : global_auth_token
 	};
 	
 	$.post(octocore_url('slider', id_server), filter, function( data ) {
@@ -299,7 +370,8 @@ function octocore_slider(page, id_dom, id_server) {
 			swiper_wrapper.append(new_slide);
 		});
 			
-		myApp.swiper('.page[data-page='+page+'] .slider-hero .swiper-container', {
+		//myApp.swiper('.page[data-page='+page+'] .slider-hero .swiper-container', {
+		myApp.swiper('.slider-hero .swiper-container', {
 			autoplay: 10000,
 			loop: true,
 			pagination: '.swiper-pagination',
@@ -320,7 +392,7 @@ function octocore_walkthrough(page, id_dom, id_server) {
 	var swiper_slide_template = $('<div id="" class="swiper-slide walkthrough-slide template"><div class="slide-title"></div><div class="slide-text"</div></div>');
 
 	var filter = {
-		auth_token : localStorage.auth_token
+		auth_token : global_auth_token
 	};
 	
 	if (id_server!=null) {
@@ -367,6 +439,7 @@ function octocore_walkthrough(page, id_dom, id_server) {
 
 	$('#get_started').click(function() {
 		window.localStorage.skip_walkthrough = 1;
+		window.localStorage.walkthrough_slider_date = octocore_get_app_detail("WALKTHROUGH_SLIDER_DATE");
 		mainView.router.load({
 			url: 'home.html'
 		});
@@ -374,48 +447,16 @@ function octocore_walkthrough(page, id_dom, id_server) {
 }
 
 
-function octocore_slider_TEMPLATE(page, id_dom, id_server) {
-
-	console.log("function octocore_slider_TEMPLATE : "+page+" "+id_dom+" "+id_server);
-
-	var filter = {
-		auth_token : localStorage.auth_token
-	};
-	
-	$.post(octocore_url('slider', id_server), filter, function( data ) {
-
-		var slides = $.parseJSON(data.result.slides);
-
-		var swiper_wrapper = $('#'+id_dom+' .swiper-wrapper');
-		var slide_template = swiper_wrapper.find('.swiper-slide.template');
-		slide_template.removeClass('template');
-		
-		$.each( slides, function( key, val ) {
-			var new_slide = slide_template.clone();
-			new_slide.css('background-image', "url('"+val.image+"')");
-			new_slide.find('.slide-title').html(val.title);
-			new_slide.find('.slide-text').html(val.text);
-			swiper_wrapper.append(new_slide);
-		});
-		
-		slide_template.remove();
-	
-		myApp.swiper('.page[data-page='+page+'] .slider-hero .swiper-container', {
-			autoplay: 10000,
-			loop: true,
-			pagination: '.swiper-pagination',
-			paginationClickable: true
-		});
-
-	}, "json");
-}
-
-function octocore_list(entity) {
+function octocore_proucts_list(entity) {
 
 	console.log("function octocore_list : "+entity);
 
+	var wrapper = $('.products-list');
+	var item_template = wrapper.find('.template');
+	item_template.removeClass('template');
+
 	var filter = {
-		auth_token : localStorage.auth_token,
+		auth_token : global_auth_token,
 		command : 'list',
 		mapper : 'app'
 	};
@@ -423,10 +464,6 @@ function octocore_list(entity) {
 	$.post(octocore_url(entity, null), filter, function( data ) {
 
 		var items = data.data;
-
-		var wrapper = $('.products-list');
-		var item_template = wrapper.find('.template');
-		item_template.removeClass('template');
 
 		$.each( items, function( key, val ) {
 			var new_item = item_template.clone();
@@ -440,50 +477,74 @@ function octocore_list(entity) {
 	}, "json");
 }
 
-function octocore_list_wide(entity) {
+function octocore_articles_list(page_dom_id, entity, compact) {
 
 	console.log("function octocore_list_wide : "+entity);
 
+	var page_content = $('.page[data-page='+page_dom_id+'] .page-content');
+
+	var controller = $('<div class="list-block cards-list articles-list"><ul></ul></div>');
+	page_content.append(controller);
+	var list_wrapper = controller.find('ul');
+	var item_template = $('<li class="card"><a href="news-article.html" class="octocore-dynamic-link"><div class="card-header card-header-image no-border color-white valign-bottom" style=""><div class="title"></div><div class="article-categories"><span class="chip chip-small color-lightgreen"><span class="chip-label"></span></span></div></div></a></li>');
+
+	if (compact) {
+		item_template.css('display', 'inline-block');
+		item_template.find('.card-header.card-header-image').css('width', '20vw');
+		item_template.find('.card-header.card-header-image').css('height', '20vw');
+		item_template.find('.article-categories').remove();
+
+		item_template.find('.title').css('overflow', 'hidden');
+		item_template.find('.title').css('white-space', 'nowrap');
+	}
+
 	var filter = {
-		auth_token : localStorage.auth_token,
+		auth_token : global_auth_token,
 		command : 'list',
-		mapper : 'app'
+		mapper : 'app',
+		start : 0,
+		length : 1000
 	};
 	
 	$.post(octocore_url(entity, null), filter, function( data ) {
 
 		var items = data.data;
 
-		var wrapper = $('.articles-list > ul');
-		var item_template = wrapper.find('.template');
-		item_template.removeClass('template');
-
 		$.each( items, function( key, val ) {
 
-			console.log ('list item')
 			var new_item = item_template.clone();
-			new_item.find('.article-title').html(val.id);
-			new_item.find('.card-header-image').css('background-image', "url('"+val.image+"')");
+			new_item.find('.title').html(val.title);
+				
+			if (val.image==null) {
+				//do nothing
+			} else if (val.image.toUpperCase().includes("<SVG")) {
+				var svg = $(val.image);
+				svg.css('position', 'absolute');
+    			svg.css('left', '0');
+    			svg.css('top', '0');
+				new_item.find('.card-header-image').append(svg);
+			} else {
+				new_item.find('.card-header-image').css('background-image', "url('"+val.image+"')");
+			}
 			new_item.find('.chip-label').html(val.category);
 			new_item.find('a').attr("data-octocore_entity", entity);
 			new_item.find('a').attr("data-octocore_id", val.id);
-			wrapper.append(new_item);
+			list_wrapper.append(new_item);
 		});
 		
 		octocore_dynamiclinks();
 
-		item_template.remove();
-
 	}, "json");
 }
 
-function octocore_features(page, id_dom, entity) {
+function octocore_features(page_dom_id, entity) {
 
-	console.log("function octocore_features : "+page+" "+id_dom+" "+entity);
+	console.log("function octocore_features : "+page_dom_id+" "+entity);
 
-	var section = $('#'+id_dom+'.features-list');
-	section.html('<div class="section-features"><div class="content-block-title">'+entity+'</div><div class="list-block media-list no-hairlines no-hairlines-between"><ul></ul></div></div>');
-	var list_wrapper = section.find('ul');
+	var page_content = $('.page[data-page='+page_dom_id+'] .page-content');
+	var controller = $('<div id="features-home" class="features-list"><div class="section-features"><div class="content-block-title">'+entity+'</div><div class="list-block media-list no-hairlines no-hairlines-between"><ul></ul></div></div></div>');
+	page_content.append(controller);
+	var list_wrapper = controller.find('ul');
 	var item_template = $('<li><a href="news-article.html" class="item-link octocore-dynamic-link"><div class="item-content"><div class="item-media"><i class="material-icons">&nbsp;</i></div><div class="item-inner"><div class="item-title-row"><div class="item-title"></div></div><div class="item-text"></div></div></div></a></li>');
 
 	item_template.hide();
@@ -494,12 +555,12 @@ function octocore_features(page, id_dom, entity) {
 	list_wrapper.parent().append(infinite_scroll_loader);
 	
 	var start = 0;
-	var length = 25;
+	var length = 20;
 	var loading = false;
 	var maxItems = 1000000;
 	octocore_features_scroll(entity, item_template, list_wrapper, start, length, loading);
 	
-	$$('.page[data-page='+page+'] .infinite-scroll').on('infinite', function() {
+	$$('.page[data-page='+page_dom_id+'] .infinite-scroll').on('infinite', function() {
 
 		if (loading) { 
 			return;
@@ -524,7 +585,7 @@ function octocore_features_scroll(entity, item_template, list_wrapper, start, le
 	console.log("function octocore_features_scroll : "+start+" "+length);
 
 	var filter = {
-		auth_token : localStorage.auth_token,
+		auth_token : global_auth_token,
 		command : 'list',
 		mapper : 'app',
 		start : start,
@@ -572,7 +633,7 @@ function octocore_newsarticle(entity, entity_id) {
 	console.log("function octocore_newsarticle : "+entity+" "+entity_id);
 	
 	var filter = {
-		auth_token : localStorage.auth_token,
+		auth_token : global_auth_token,
 		mapper : 'app',
 	};
 
