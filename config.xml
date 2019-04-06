@@ -22,6 +22,8 @@
             <string name="fb_app_name">NannyApp</string>
         </config-file>
     </platform>
+    <platform name="ios">
+    </platform>
     <preference name="orientation" value="portrait" />
     <preference name="target-device" value="universal" />
     <preference name="fullscreen" value="false" />
