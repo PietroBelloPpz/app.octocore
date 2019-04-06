@@ -2,8 +2,11 @@
 
 //var base_url = 'http://localhost.nannyapp.cloud/';
 //var base_url = 'http://localhost.roncatospareparts.octocore.it/';
-var base_url = 'http://www.nannyapp.cloud/';
-//var base_url = 'http://192.168.1.83:8064/';
+//var base_url = 'http://www.nannyapp.cloud/';	
+//var base_url = 'http://192.168.1.83:8061/';	//localhost.nannyapp.cloud
+//var base_url = 'http://192.168.1.83:8062/';	//localhost.roncatospareparts.octocore.it
+//var base_url = 'http://192.168.1.83:8063/';	//localhost.alicode.octocore.it
+var base_url = 'http://192.168.1.83:8064/';	//localhost.dorigato.app.twenty.cloud
 
 var app_id = '1';
 var app_details = null;
@@ -20,6 +23,78 @@ var current_page_index = null;
 var current_entity_name = null;
 var current_entity_id = null;
 
+const DB_NAME = 'indexeddb-octocore';
+const DB_VERSION = 2; // Use a long long for this value (don't use a float)
+const DB_STORE_NAME = 'dorigato';
+var db;
+
+var cacheImages = false;
+var useCachedImages = true;
+var cacheThumbnails = true;
+
+//https://developer.mozilla.org/it/docs/Web/API/IndexedDB_API/Utilizzare_IndexedDB
+function octocore_openDb() {
+
+	//window.indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB;
+	if (!window.indexedDB) {
+	    window.alert("Il tuo browser non supporta una versione stabile di IndexedDb. Alcune funzionalità non saranno disponibili.");
+	}
+	var request = window.indexedDB.open(DB_NAME, DB_VERSION);
+	request.onsuccess = function (evt) {
+		// Better use "this" than "request" to get the result to avoid problems with
+		// garbage collection.
+		// db = req.result;
+		db = this.result;
+		console.log("openDb DONE");
+
+		octocore_db_add('articles');
+		octocore_cacheImages('articles', 'image', true);
+    };
+	request.onerror = function(event) {
+	  	alert("Perché non permetti alla mia app di usare IndexedDb?");
+	};
+	request.onupgradeneeded = function(event) {
+
+		console.log('indexdDB onupgradeneeded');
+
+		var db = event.target.result;
+		var objectStore = db.createObjectStore("articles", { keyPath: "id" });
+		//objectStore.createIndex("codice_prodotto", "codice_prodotto", { unique: false });
+		objectStore.createIndex("description", "description", { unique: false });
+
+		var objectStoreCachedImages = db.createObjectStore("cached_images", { keyPath: "path" });
+
+		// Use transaction oncomplete to make sure the objectStore creation is 
+		// finished before adding data into it.
+		objectStore.transaction.oncomplete = function(event) {
+			/*
+			// Store values in the newly created objectStore.2
+			var customerObjectStore = db.transaction("customers", "readwrite").objectStore("customers");
+			customerData.forEach(function(customer) {
+				customerObjectStore.add(customer);
+				});
+			};
+			*/
+		};
+	};
+}
+
+function octocore_db_add(entity) {
+
+	var transaction = db.transaction([entity], "readwrite");
+
+	octocore_server_api_list(entity, 0, 20, function(items) {
+		
+		var objStore = db.transaction(entity, "readwrite").objectStore(entity);
+
+		$.each( items, function( key, val ) {
+			console.log('add to db');
+		    objStore.add(val);
+		});
+	});
+}
+
+
 function octocore_init(callback) {
 
 	if (global_auth_token==null) {
@@ -30,6 +105,10 @@ function octocore_init(callback) {
 		app_id : app_id,
 		auth_token : global_auth_token
 	};
+
+	octocore_openDb();
+
+	//octocore_saveImages();
 
 	$.post(octocore_url('app-get-init', ''), filter, function( data ) {
 
@@ -44,6 +123,83 @@ function octocore_init(callback) {
 
 	}, "json").fail(function(xhr, textStatus, errorThrown) {
         alert("Error Initialization POST " + xhr.responseText);});
+}
+
+function toDataUrl(url, callback) {
+	var xhr = new XMLHttpRequest();
+	xhr.onload = function() {
+	    var reader = new FileReader();
+	    reader.onloadend = function() {
+	        callback(reader.result);
+	    }
+	    reader.readAsDataURL(xhr.response);
+	};
+	xhr.open('GET', url+"?"+Date.now());
+	xhr.responseType = 'blob';
+	xhr.send();
+}
+
+
+function octocore_cacheImages(entity, imagefield) {
+
+	octocore_server_api_list(entity, 0, 20, function(items) {
+
+		$.each( items, function( key, val ) {
+			octocore_db_cachedImages_add( val[imagefield] );
+		});
+	});
+	
+}
+
+function octocore_db_cachedImages_add(path) {
+
+	if (cacheThumbnails) {
+		path = path.replace("ORIGINAL", "THUMBNAIL");
+	}
+
+	console.log('ADD CACHE IMAGE to db : ' +path);
+
+	toDataUrl(path, function(myBase64) {
+	    
+	    //console.log(myBase64); // myBase64 is the base64 string
+	    //targetImg.attr('src', myBase64);
+
+		var objStore = db.transaction(["cached_images"], "readwrite").objectStore("cached_images");
+
+	    var cachedImage = {
+			path : path,
+			date : Date.now(),
+			base64 : myBase64, 
+		}
+
+		objStore.add(cachedImage);
+
+		console.log('...CACHED ' +path);
+	});
+}
+
+function octocore_db_cachedImages_set(path, target, background=false) {
+
+	if (cacheThumbnails) {
+		path = path.replace("ORIGINAL", "THUMBNAIL");
+	}
+
+	console.log('SET CACHED IMAGE from db : ' +path);
+
+	var objStore = db.transaction(["cached_images"]).objectStore("cached_images");
+	var objStoreRequest = objStore.get(path);
+	
+	objStoreRequest.onsuccess = function(event) {
+		if (objStoreRequest.result==false) {
+  			console.log('...CACHED IMAGE not found '+path)
+  		} else {
+  			if (background) {
+				target.css('background-image', "url('"+objStoreRequest.result.base64+"')");
+  			} else {
+  				target.attr('src', objStoreRequest.result.base64);
+  			}
+  		}
+  	};
 }
 
 function octocore_get_app_detail(code, default_value) {
@@ -147,6 +303,11 @@ function octocore_sidebar() {
 		var sidebar = $('body > div.panel-left');
 		var menu_list = sidebar.find('div.list-block > ul');
 		var menu_voice_template = $('<li><a href="" class="item-link close-panel octocore-dynamic-link"><div class="item-content"><div class="item-media"><img src="assets/custom/img/components.png" width="24" alt="Components" /></div><div class="item-inner"><div class="item-title"></div></div></div></a></li>');
+
+		var old_voices = menu_list.find('li .octocore-dynamic-link');
+		for (var i = old_voices.length - 1; i >= 0; i--) {
+			old_voices[i].remove();
+		}
 
 		var key = 0;
 		pages = [];
@@ -440,9 +601,7 @@ function octocore_walkthrough(page, id_dom, id_server) {
 	$('#get_started').click(function() {
 		window.localStorage.skip_walkthrough = 1;
 		window.localStorage.walkthrough_slider_date = octocore_get_app_detail("WALKTHROUGH_SLIDER_DATE");
-		mainView.router.load({
-			url: 'home.html'
-		});
+		octocore_router_init();
 	});
 }
 
@@ -584,19 +743,7 @@ function octocore_features_scroll(entity, item_template, list_wrapper, start, le
 
 	console.log("function octocore_features_scroll : "+start+" "+length);
 
-	var filter = {
-		auth_token : global_auth_token,
-		command : 'list',
-		mapper : 'app',
-		start : start,
-		length : length
-	};
-
-	$.post(octocore_url(entity, null), filter, function( data ) {
-
-		var items = data.data;
-
-		console.log("found : "+items.length);
+	octocore_server_api_list(entity, start, length, function(items) {
 
 		$.each( items, function( key, val ) {
 			
@@ -609,7 +756,11 @@ function octocore_features_scroll(entity, item_template, list_wrapper, start, le
 			new_item.find('.item-text').html(val.text);
 			//new_item.find('.material-icons').html(val.icon);
 			
-			new_item.find('.material-icons').css('background-image', 'url(\''+val.image+'\'');
+			if (useCachedImages) {
+				octocore_db_cachedImages_set(val.image, new_item.find('.material-icons').first(), true);
+			} else {
+				new_item.find('.material-icons').css('background-image', 'url(\''+val.image+'\'');
+			}
 			new_item.find('.material-icons').css('background-size', 'contain');
 			new_item.find('.material-icons').css('background-position', 'center');
 			new_item.find('.material-icons').css('background-repeat', 'no-repeat');
@@ -625,21 +776,14 @@ function octocore_features_scroll(entity, item_template, list_wrapper, start, le
 
 		return true;
 	
-	}, "json");
+	});
 }
 
 function octocore_newsarticle(entity, entity_id) {
 
 	console.log("function octocore_newsarticle : "+entity+" "+entity_id);
 	
-	var filter = {
-		auth_token : global_auth_token,
-		mapper : 'app',
-	};
-
-	$.post(octocore_url(entity, entity_id), filter, function( data ) {
-
-		var val = data.result;
+	octocore_server_api_single(entity, entity_id, function( val ) {
 
 		console.log("found : "+JSON.stringify(val));
 
@@ -654,5 +798,49 @@ function octocore_newsarticle(entity, entity_id) {
 
 		return true;
 	
+	});
+}
+
+function octocore_server_api_list(entity, start, length, callback) {
+
+	console.log("function octocore_server_api_list : "+entity+" "+start+" "+length);
+
+	var filter = {
+		auth_token : global_auth_token,
+		command : 'list',
+		mapper : 'app',
+		start : start,
+		length : length
+	};
+
+	$.post(octocore_url(entity, null), filter, function( data ) {
+
+		console.log("API LIST : "+data.data.length);
+
+		callback(data.data);
+
+		return true;
+	
 	}, "json");
 }
+
+function octocore_server_api_single(entity, entity_id, callback) {
+
+	console.log("function octocore_server_api_single : "+entity+" "+entity_id);
+
+	var filter = {
+		auth_token : global_auth_token,
+		mapper : 'app',
+	};
+
+	$.post(octocore_url(entity, entity_id), filter, function( data ) {
+
+		console.log("API SINGLE : "+data.result.id);
+
+		callback(data.result);
+
+		return true;
+	
+	}, "json");
+}
+

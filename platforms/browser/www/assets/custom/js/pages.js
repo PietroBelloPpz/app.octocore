@@ -1543,6 +1543,7 @@ myApp.onPageInit('splash-screen', function(page) {
 		obj.el.classList.add('animation-finish');
 
 		/* 1 seconds after logo animation is completed, open walkthrough screen. */
+		/*
 		setTimeout(function(){
 
 			if (app_details==null) {
@@ -1555,6 +1556,18 @@ myApp.onPageInit('splash-screen', function(page) {
 			}
 
 		}, 1000);
+*/
+		document.addEventListener('deviceready', function(){
+			if (app_details==null) {
+				octocore_init(function() { 
+					octocore_theme(); 
+					octocore_sidebar(); 
+					octocore_router_init();
+					octocore_dynamiclinks();
+				});
+			}
+
+		}, false);
 	});
 
 	/* 1 second after page is loaded, show preloader. */
@@ -1722,7 +1735,7 @@ myApp.onPageInit('walkthrough', function(page) {
 
 /*
 |------------------------------------------------------------------------------
-| Walkthrough
+| terms
 |------------------------------------------------------------------------------
 */
 
